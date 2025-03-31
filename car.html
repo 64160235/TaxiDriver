@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Racing Timer Game - Passenger Pickup</title>
+  <script type="text/javascript" src="simpleGame.js"></script>
+  <script type="text/javascript">
+    var scene;
+    var car;
+    var checkpoint;
+    var isStarted = false;
+    var isFinished = false;
+    var startTime = 0;
+    var finalTime = 0;
+    var currentSpeed = 0;
+    var passenger;
+    var hasPassenger = false;
+    var destination;
+    var score = 0;
+    var timeLimit = 60;
+
+
+    function init() {
+      scene = new Scene();
+      scene.setSize(800, 800);
+      scene.setBGImage("background.png");
+
+
+      car = new Sprite(scene, "car1.png", 90, 80);
+      car.setPosition(100, 250);
+      car.setAngle(0);
+      car.setSpeed(0);
+
+      passenger = new Sprite(scene, "Human.png", 30, 30);
+      passenger.setSpeed(0);
+
+
+      destination = new Sprite(scene, "destination.png", 80, 50);
+      destination.setSpeed(0);
+
+
+      randomPassengerPosition();
+      // จับคีย์บอร์ด
+      window.addEventListener("keydown", function (event) {
+        keysDown[event.keyCode] = true;
+
+        if (event.keyCode === K_R) {
+          resetGame();
+        }
+      });
+
+      window.addEventListener("keyup", function (event) {
+        keysDown[event.keyCode] = false;
+      });
+
+      scene.start();
+    }
+    //ใช้สุ่มตำแหน่งของผู้โดยสารในพื้นที่กำหนด
+    function randomPassengerPosition() {
+      passenger.setPosition(Math.random() * 700 + 50, Math.random() * 400 + 50);
+    }
+    function hideSprite(sprite) {
+      sprite.setPosition(-100, -100);
+    }
+    //ใช้สุ่มตำแหน่งของจุดหมายปลายทาง
+    function randomDestinationPosition() {
+      destination.setPosition(Math.random() * 700 + 50, Math.random() * 400 + 50);
+    }
+    function resetGame() {
+      isStarted = false;
+      isFinished = false;
+      startTime = 0;
+      finalTime = 0;
+      hasPassenger = false;
+      currentSpeed = 0;
+      score = 0;
+      car.setPosition(100, 250);
+      car.setAngle(0);
+      car.setSpeed(0);
+      randomPassengerPosition();
+      hideSprite(destination);
+    }
+    function update() {
+      scene.clear();
+
+      if (isStarted && !isFinished) {
+        var elapsed = Math.floor((Date.now() - startTime) / 1000);
+        if (elapsed >= timeLimit) {
+          isFinished = true;  // เมื่อถึงเวลาที่กำหนดให้จบเกม
+        }
+      }
+
+    
+      // หมุนรถ
+      if (keysDown[K_LEFT]) {
+        car.changeAngleBy(-5);
+      }
+      if (keysDown[K_RIGHT]) {
+        car.changeAngleBy(5);
+      }
+
+      // เร่งความเร็ว
+      if (keysDown[K_UP] && !isFinished) {
+        if (!isStarted) {
+          isStarted = true;
+          startTime = Date.now();
+        }
+
+        currentSpeed += 0.1;
+        if (currentSpeed > 10) currentSpeed = 10;
+        car.setSpeed(currentSpeed);
+      } else {
+        currentSpeed *= 0.95;
+        if (currentSpeed < 0.1) currentSpeed = 0;
+        car.setSpeed(currentSpeed);
+      }
+
+      car.update();
+
+      if (!hasPassenger) {
+        passenger.update();
+      }
+      //การรับผู้โดยสาร แล้วแสดงตำแหน่งส่ง
+      if (!hasPassenger && car.collidesWith(passenger)) {
+        hasPassenger = true;
+        hideSprite(passenger);
+        randomDestinationPosition();
+      }
+      if (hasPassenger) destination.update();
+      //ส่งปลายทางละสุ่มตำแหน่งใหม่ของผู้โดยสารใหม่
+      if (hasPassenger && car.collidesWith(destination)) {
+        hasPassenger = false;
+        score++;
+        hideSprite(destination);
+        randomPassengerPosition();
+      }
+
+      // แสดงเวลา / คะแนน
+      scene.context.fillStyle = "white";
+      scene.context.font = "20px Arial";
+
+      // แสดงข้อความเมื่อมีผู้โดยสาร
+      if (hasPassenger) {
+        scene.context.fillText("ไปส่งผู้โดยสาร!", 10, 60);
+        scene.context.fillText("เวลา: " + elapsed + " วินาที", 10, 30);
+      } else if (isStarted) {
+        var elapsed = Math.floor((Date.now() - startTime) / 1000);
+        scene.context.fillText("เวลา: " + elapsed + " วินาที", 10, 30);
+        scene.context.fillText("ไปรับผู้โดยสาร", 10, 60);
+      } else {
+        scene.context.fillText("กด ↑ เพื่อเริ่มเกม | กด R เพื่อรีเซ็ต", 10, 30);
+        scene.context.fillText("รับส่งผู้โดยสารให้มากที่สุด ภายใน 60 sec", 10, 50);
+      }
+
+      // แสดงคะแนน
+      scene.context.fillText("คะแนน: " + score, 680, 30);
+
+      // เมื่อเกมจบ
+      if (isFinished) {
+        scene.context.fillText("หมดเวลา! คะแนนรวม: " + score, 300, 250);
+        scene.context.fillText("กด R เพื่อรีเซ็ต", 320, 280);
+        car.setSpeed(0); // หยุดรถเมื่อเกมจบ
+        return; // หยุดการทำงานส่วนอื่นๆ
+      }
+    }
+
+  </script>
+</head>
+
+<body onload="init()">
+</body>
+
+</html>
