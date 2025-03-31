@@ -111,6 +111,7 @@
         if (currentSpeed > 10) currentSpeed = 10;
         car.setSpeed(currentSpeed);
       } else {
+        // ทำงานแบบ checkDrag ลดค่าความเร็ว ลงทุกเฟรม พอต่ำกว่า 0.1 ก็จะถูกตัดเหลือ 0 ละหยุด
         currentSpeed *= 0.95;
         if (currentSpeed < 0.1) currentSpeed = 0;
         car.setSpeed(currentSpeed);
